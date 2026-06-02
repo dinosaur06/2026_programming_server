@@ -46,7 +46,7 @@ private:
             clients_[pkt.playerId] = remote_ep_;
 
             std::cout << "[MOVE] Player " << pkt.playerId
-                << " -> (" << pkt.x << ", " << pkt.y << ", " << pkt.z << ")\n";
+                << " -> (" << pkt.x << ", " << pkt.y << ")\n";
 
             // 다른 클라이언트에게 브로드캐스트
             broadcast(recv_buf_, bytes, pkt.playerId);
