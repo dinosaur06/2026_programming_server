@@ -12,7 +12,7 @@ enum class PacketType : uint8_t {
 struct MovePacket {
     PacketType type;    // 1 byte
     uint32_t   playerId;// 4 bytes
-    float      x, y, z;// 4 bytes * 3
+    float      x, y;// 4 bytes * 3
 };  // รั 16 bytes
 
 #pragma pack(pop)
