@@ -53,6 +53,7 @@ private:
         }
         else if (type == PacketType::PING) {
             // Pong 응답
+            std::cout << "[PING] Received from client! Sending PONG...\n"; // 로그 추가!
             char pong = static_cast<char>(PacketType::PING);
             socket_.async_send_to(buffer(&pong, 1), remote_ep_,
                 [](boost::system::error_code, std::size_t) {});
