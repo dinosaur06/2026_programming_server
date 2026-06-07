@@ -43,9 +43,17 @@ private:
             buffer(recv_buf_), remote_ep_,
             [this](boost::system::error_code ec, std::size_t bytes) {
                 if (!ec && bytes > 0) {
-                    handle_packet(bytes);
+                    try {
+                        // 모니터링을 위한 패킷 카운트 증가
+                        g_packetCount++;
+                        g_totalBytes += bytes;
+                        handle_packet(bytes);
+                    }
+                    catch (...) {
+                        std::cerr << "[Error] Packet handling failed!" << std::endl;
+                    }
                 }
-                do_receive();
+                do_receive(); // 루프 유지
             }
         );
     }
@@ -115,6 +123,7 @@ private:
 };
 
 int main() {
+    std::cout << "MovePacket size: " << sizeof(MovePacket) << " bytes" << std::endl;
     StartMonitoring();
     try {
         boost::asio::io_context ioContext;

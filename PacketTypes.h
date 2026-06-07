@@ -12,8 +12,8 @@ enum class PacketType : uint8_t {
 struct MovePacket {
     PacketType type;    // 1 byte
     uint32_t   playerId;// 4 bytes
-    float      x, y;// 4 bytes * 3
-};  // รั 16 bytes
+    float      x, y;// 4 bytes * 2
+};  // รั 13 bytes
 
 struct HitPacket {
     PacketType type = PacketType::HIT;
