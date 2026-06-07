@@ -16,6 +16,7 @@ boost::asio::io_context* g_ioContext = nullptr;
 
 void signal_handler(int signal) {
     if (signal == SIGINT && g_ioContext) {
+        StopMonitoring();
         g_ioContext->stop();
     }
 }
@@ -68,6 +69,8 @@ private:
             // 그 후 플레이어 위치 갱신
             clients_[playerId].x = movePkt.x;
             clients_[playerId].y = movePkt.y;
+
+            broadcast(recv_buf_, bytes, playerId);
         }
 
         if (type == PacketType::SHOOT) {
@@ -112,6 +115,7 @@ private:
 };
 
 int main() {
+    StartMonitoring();
     try {
         boost::asio::io_context ioContext;
         g_ioContext = &ioContext;
