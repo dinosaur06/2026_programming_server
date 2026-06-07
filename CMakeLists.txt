@@ -9,7 +9,6 @@ add_executable(fps_server
     player.cpp
     GameManager.cpp
     PhysicsEngine.cpp
-    Monitor.cpp
 )
 
 target_link_libraries(fps_server Boost::system pthread)
