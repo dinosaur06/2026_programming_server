@@ -1,24 +1,10 @@
 #include <boost/asio.hpp>
 #include <iostream>
 #include <unordered_map>
-#include <cstring>
-#include <csignal>
 #include "PacketTypes.h"
-#include "Monitor.h"
 
 using namespace boost::asio;
 using udp = ip::udp;
-
-// 전역 io_context 선언 (Ctrl+C 발생 시 안전하게 서버를 종료하기 위함)
-boost::asio::io_context* g_ioContext = nullptr;
-
-// Ctrl+C (SIGINT) 시그널 핸들러 함수
-void signal_handler(int signal) {
-    if (signal == SIGINT && g_ioContext) {
-        std::cout << "\n[-] Shutdown signal received. Closing server...\n";
-        g_ioContext->stop(); // 서버의 네트워크 루프 중단
-    }
-}
 
 class FpsServer {
 public:
@@ -42,10 +28,6 @@ private:
             buffer(recv_buf_), remote_ep_,
             [this](boost::system::error_code ec, std::size_t bytes) {
                 if (!ec && bytes > 0) {
-                    // 패킷을 받을 때마다 전역 카운터 증가
-                    g_pingPacketCount++;
-                    g_totalTrafficBytes += bytes;
-
                     handle_packet(bytes);
                 }
                 do_receive(); // 다음 패킷 대기
@@ -71,7 +53,7 @@ private:
         }
         else if (type == PacketType::PING) {
             // Pong 응답
-            std::cout << "[Raw Recv] " << bytes << " bytes arrived. (PING)\n";            
+            std::cout << "[PING] Received from client! Sending PONG...\n"; // 로그 추가!
             char pong = static_cast<char>(PacketType::PING);
             socket_.async_send_to(buffer(&pong, 1), remote_ep_,
                 [](boost::system::error_code, std::size_t) {});
@@ -88,28 +70,8 @@ private:
 };
 
 int main() {
-    try {
-        boost::asio::io_context ctx;
-        g_ioContext = &ctx;
-
-        // Ctrl+C 시그널 핸들러 등록
-        std::signal(SIGINT, signal_handler);
-
-        // 1. 서버 구동 전 1초 주기 모니터링 스레드 시작
-        StartMonitoring();
-
-        // 서버 객체 생성
-        FpsServer server(ctx, 9000);
-
-        // 서버 실행 (네트워크 대기)
-        ctx.run();
-
-        // 2. ctx.run()이 종료되면(Ctrl+C를 누르면) 모니터링을 멈추고 txt 파일 저장
-        StopMonitoring();
-    }
-    catch (std::exception& e) {
-        std::cerr << "Exception: " << e.what() << std::endl;
-        StopMonitoring(); // 에러로 꺼져도 보고서는 안전하게 뽑기
-    }
+    io_context ctx;
+    FpsServer server(ctx, 9000);
+    ctx.run(); // 이벤트 루프 (블로킹)
     return 0;
 }
