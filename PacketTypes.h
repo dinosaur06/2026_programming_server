@@ -15,4 +15,17 @@ struct MovePacket {
     float      x, y;// 4 bytes * 3
 };  // 총 16 bytes
 
+struct HitPacket {
+    PacketType type = PacketType::HIT;
+    uint32_t playerId;
+    int currentHp;
+};
+
+struct ShootPacket {
+    PacketType type = PacketType::SHOOT; // 1 byte
+    uint32_t playerId;                   // 4 bytes (누가 쐈는지)
+    float dirX;                          // 4 bytes (어느 방향 X)
+    float dirY;                          // 4 bytes (어느 방향 Y)
+}; // 총 13 bytes
+
 #pragma pack(pop)
