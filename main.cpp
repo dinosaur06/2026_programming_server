@@ -81,8 +81,10 @@ private:
     void broadcast(const char* data, std::size_t len, uint32_t exclude_id) {
         for (auto& [id, ep] : clients_) {
             if (id == exclude_id) continue;
+
+            // 람다 함수 내부의 매개변수 타입을 올바르게 수정했습니다.
             socket_.async_send_to(buffer(data, len), ep,
-                [](boost::system::service_ptr, std::size_t) {});
+                [](boost::system::error_code ec, std::size_t bytes_transferred) {});
         }
     }
 };
