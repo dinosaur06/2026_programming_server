@@ -110,3 +110,24 @@ private:
         }
     }
 };
+
+int main() {
+    try {
+        boost::asio::io_context ioContext;
+        g_ioContext = &ioContext;
+
+        // SIGINT(Ctrl+C) 신호 처리 등록
+        std::signal(SIGINT, signal_handler);
+
+        // 서버 포트 9000번으로 시작
+        FpsServer server(ioContext, 9000);
+
+        // io_context 실행 (서버 루프 시작)
+        ioContext.run();
+    }
+    catch (std::exception& e) {
+        std::cerr << "[Error] " << e.what() << std::endl;
+    }
+
+    return 0;
+}
