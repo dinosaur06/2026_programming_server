@@ -43,79 +43,81 @@ private:
             buffer(recv_buf_), remote_ep_,
             [this](boost::system::error_code ec, std::size_t bytes) {
                 if (!ec && bytes > 0) {
-                    try {
-                        // 모니터링을 위한 패킷 카운트 증가
-                        g_packetCount++;
-                        g_totalBytes += bytes;
-                        handle_packet(bytes);
-                    }
-                    catch (...) {
-                        std::cerr << "[Error] Packet handling failed!" << std::endl;
-                    }
+                    // 데이터를 안전하게 복사
+                    std::vector<char> packetData(recv_buf_, recv_buf_ + bytes);
+
+                    g_packetCount++;
+                    // 복사본을 넘겨줌
+                    handle_packet(packetData);
                 }
-                do_receive(); // 루프 유지
+                do_receive();
             }
         );
     }
 
-    void handle_packet(std::size_t bytes) {
-        PacketType type = static_cast<PacketType>(recv_buf_[0]);
 
-        // [추가] 패킷을 보낸 플레이어가 서버에 등록되어 있는지 확인하고, 없으면 등록!
-    // MOVE 패킷 등을 통해 playerId를 알 수 있다고 가정합니다.
+    void handle_packet(const std::vector<char>& data) {
+        size_t bytes = data.size();
+        if (bytes < 1) return;
+
+        // 데이터 접근은 data.data()를 사용
+        PacketType type = (PacketType)data[0];
+
         if (type == PacketType::MOVE) {
             MovePacket movePkt;
-            std::memcpy(&movePkt, recv_buf_, sizeof(MovePacket));
+            std::memcpy(&movePkt, data.data(), sizeof(MovePacket));
 
-            uint32_t playerId = movePkt.playerId;
+            uint32_t playerId = movePkt.playerId; // 패킷에서 ID 추출
+
+            // 1. 플레이어가 맵에 없으면 등록
             if (clients_.find(playerId) == clients_.end()) {
+                // 임시로 빈 Player 생성 후 초기화
                 Player newPlayer;
-                InitPlayer(newPlayer, playerId, remote_ep_); // 초기화 함수 호출!
+                InitPlayer(newPlayer, playerId, remote_ep_);
                 clients_[playerId] = newPlayer;
-                std::cout << "[Server] Player " << playerId << " initialized!\n";
             }
-            // 그 후 플레이어 위치 갱신
+
+            // 2. 위치 갱신
             clients_[playerId].x = movePkt.x;
             clients_[playerId].y = movePkt.y;
 
-            broadcast(recv_buf_, bytes, playerId);
+            // 3. 브로드캐스트
+            broadcast(data.data(), bytes, playerId);
         }
-
-        if (type == PacketType::SHOOT) {
+        else if (type == PacketType::SHOOT) {
             ShootPacket pkt;
-            std::memcpy(&pkt, recv_buf_, sizeof(ShootPacket));
+            std::memcpy(&pkt, data.data(), sizeof(ShootPacket));
 
             uint32_t shooterId = pkt.playerId;
-            // targetId를 찾는 로직: 쏘는 사람 외의 플레이어를 타겟으로 설정
-            uint32_t targetId = (shooterId == 1) ? 2 : 1;
+            // 타겟 ID 선정 로직: 실제 게임에서는 현재 접속된 클라이언트 리스트에서 
+            // 쏘는 사람(shooterId)과 다른 플레이어를 찾아야 합니다.
+            for (auto& [id, player] : clients_) {
+                if (id != shooterId) {
+                    uint32_t targetId = id;
+                    // 충돌 판정 및 점수 로직
+                    if (PhysicsEngine::CheckCollision(clients_[shooterId].x, clients_[shooterId].y,
+                        clients_[targetId].x, clients_[targetId].y)) {
 
-            if (clients_.count(targetId)) {
-                // 1. 충돌 판정
-                if (PhysicsEngine::CheckCollision(clients_[shooterId].x, clients_[shooterId].y,
-                    clients_[targetId].x, clients_[targetId].y)) {
+                        GameManager::UpdateScore(shooterId, clients_[targetId].hp);
 
-                    // 2. 체력 깎기
-                    GameManager::UpdateScore(shooterId, clients_[targetId].hp);
+                        HitPacket hitPkt;
+                        hitPkt.type = PacketType::HIT; // 타입 명시
+                        hitPkt.playerId = targetId;
+                        hitPkt.currentHp = clients_[targetId].hp;
 
-                    // 3. 클라이언트들에게 피격 결과 전달 (HitPacket 필요)
-                    HitPacket hitPkt;
-                    hitPkt.playerId = targetId;
-                    hitPkt.currentHp = clients_[targetId].hp;
-                    broadcast(reinterpret_cast<char*>(&hitPkt), sizeof(HitPacket), 0);
-
-                    // 4. 점수 체크
-                    if (clients_[targetId].hp >= 100) { // 리스폰(100) 되었을 때 점수 처리
-                        if (shooterId == 1) p1Score++; else p2Score++;
-                        GameManager::CheckWinCondition(p1Score, p2Score);
+                        broadcast(reinterpret_cast<char*>(&hitPkt), sizeof(HitPacket), 0);
                     }
                 }
             }
         }
     }
 
+
     void broadcast(const char* data, std::size_t len, uint32_t exclude_id) {
         for (auto& [id, player] : clients_) {
             if (id == exclude_id) continue;
+
+            std::cout << "[DEBUG] " << id << "번 플레이어에게 전송 중! IP: " << player.ep.address() << std::endl;
             // endpoint 정보가 player 구조체에 있어야 함
             socket_.async_send_to(buffer(data, len), player.ep, [](auto, auto) {});
         }
