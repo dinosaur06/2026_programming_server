@@ -60,7 +60,7 @@ private:
         size_t bytes = data.size();
         if (bytes < 1) return;
 
-        std::cout << "[DEBUG] 수신된 타입 값: " << (int)data[0] << std::endl;
+        std::cout << "[DEBUG] received type value: " << (int)data[0] << std::endl;
 
         // 데이터 접근은 data.data()를 사용
         PacketType type = (PacketType)data[0];
@@ -71,7 +71,7 @@ private:
 
             uint32_t playerId = movePkt.playerId; // 패킷에서 ID 추출
 
-            std::cout << "[DEBUG] MOVE 패킷 수신 - ID: " << playerId
+            std::cout << "[MOVE] Packet Receive - ID: " << playerId
                 << ", X: " << movePkt.x
                 << ", Y: " << movePkt.y << std::endl;
 
