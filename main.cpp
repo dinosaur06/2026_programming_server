@@ -60,6 +60,8 @@ private:
         size_t bytes = data.size();
         if (bytes < 1) return;
 
+        std::cout << "[DEBUG] 수신된 타입 값: " << (int)data[0] << std::endl;
+
         // 데이터 접근은 data.data()를 사용
         PacketType type = (PacketType)data[0];
 
