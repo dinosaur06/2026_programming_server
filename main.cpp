@@ -71,6 +71,10 @@ private:
 
             uint32_t playerId = movePkt.playerId; // 패킷에서 ID 추출
 
+            std::cout << "[DEBUG] MOVE 패킷 수신 - ID: " << playerId
+                << ", X: " << movePkt.x
+                << ", Y: " << movePkt.y << std::endl;
+
             // 1. 플레이어가 맵에 없으면 등록
             if (clients_.find(playerId) == clients_.end()) {
                 // 임시로 빈 Player 생성 후 초기화
@@ -119,7 +123,8 @@ private:
         for (auto& [id, player] : clients_) {
             if (id == exclude_id) continue;
 
-            std::cout << "[DEBUG] " << id << "번 플레이어에게 전송 중! IP: " << player.ep.address() << std::endl;
+            std::cout << "[DEBUG] " << id << "번에게 좌표(" << player.x << ", " << player.y
+                << ") 전송 중! IP: " << player.ep.address() << std::endl;            
             // endpoint 정보가 player 구조체에 있어야 함
             socket_.async_send_to(buffer(data, len), player.ep, [](auto, auto) {});
         }
