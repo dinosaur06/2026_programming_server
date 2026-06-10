@@ -2,7 +2,7 @@
 #define GAMEMANAGER_H
 
 #include <unordered_map>
-#include "player.h" // ±âÁ¸ player.cpp/h¸¦ È°¿ëÇÕ´Ï´Ù
+#include "player.h" // ê¸°ì¡´ player.cpp/h í™œìš©
 
 class GameManager {
 public:
@@ -10,7 +10,7 @@ public:
     static void CheckWinCondition(uint32_t& p1Score, uint32_t& p2Score);
     static void RespawnPlayer(Player& p);
 
-    // [Ãß°¡] ÃÑ ¸Â¾ÒÀ» ¶§ Ã³¸®ÇÏ´Â ÇÔ¼ö
+    // [ì¶”ê°€] ì´ ë§ì•˜ì„ ë•Œ ì²˜ë¦¬í•˜ëŠ” í•¨ìˆ˜
     static void UpdateScore(uint32_t shooterId, int& targetHp);
 };
 
