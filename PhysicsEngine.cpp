@@ -4,5 +4,5 @@ bool PhysicsEngine::CheckCollision(float x1, float y1, float x2, float y2) {
     float dx = x1 - x2;
     float dy = y1 - y2;
     float distance = std::sqrt(dx * dx + dy * dy);
-    return distance < 1.0f; // 1.0Àº Ä³¸¯ÅÍÀÇ È÷Æ®¹Ú½º ¹Ý°æ (À¯´ÏÆ¼¿Í ¸ÂÃç¾ß ÇÔ)
+    return distance < 1.0f; // 1.0 : ìºë¦­í„°ì˜ ížˆíŠ¸ë°•ìŠ¤ ë°˜ê²½
 }
