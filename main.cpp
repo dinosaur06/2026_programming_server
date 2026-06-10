@@ -43,11 +43,11 @@ private:
             buffer(recv_buf_), remote_ep_,
             [this](boost::system::error_code ec, std::size_t bytes) {
                 if (!ec && bytes > 0) {
-                    // µ¥ÀÌÅÍ¸¦ ¾ÈÀüÇÏ°Ô º¹»ç
+                    // ë°ì´í„°ë¥¼ ì•ˆì „í•˜ê²Œ ë³µì‚¬
                     std::vector<char> packetData(recv_buf_, recv_buf_ + bytes);
 
                     g_packetCount++;
-                    // º¹»çº»À» ³Ñ°ÜÁÜ
+                    // ë³µì‚¬ë³¸ì„ ë„˜ê²¨ì¤Œ
                     handle_packet(packetData);
                 }
                 do_receive();
@@ -62,32 +62,32 @@ private:
 
         std::cout << "[DEBUG] received type value: " << (int)data[0] << std::endl;
 
-        // µ¥ÀÌÅÍ Á¢±ÙÀº data.data()¸¦ »ç¿ë
+        // ë°ì´í„° ì ‘ê·¼ì€ data.data()ë¥¼ ì‚¬ìš©
         PacketType type = (PacketType)data[0];
 
         if (type == PacketType::MOVE) {
             MovePacket movePkt;
             std::memcpy(&movePkt, data.data(), sizeof(MovePacket));
 
-            uint32_t playerId = movePkt.playerId; // ÆĞÅ¶¿¡¼­ ID ÃßÃâ
+            uint32_t playerId = movePkt.playerId; // íŒ¨í‚·ì—ì„œ ID ì¶”ì¶œ
 
             std::cout << "[MOVE] Packet Receive - ID: " << playerId
                 << ", X: " << movePkt.x
                 << ", Y: " << movePkt.y << std::endl;
 
-            // 1. ÇÃ·¹ÀÌ¾î°¡ ¸Ê¿¡ ¾øÀ¸¸é µî·Ï
+            // 1. í”Œë ˆì´ì–´ê°€ ë§µì— ì—†ìœ¼ë©´ ë“±ë¡
             if (clients_.find(playerId) == clients_.end()) {
-                // ÀÓ½Ã·Î ºó Player »ı¼º ÈÄ ÃÊ±âÈ­
+                // ì„ì‹œë¡œ ë¹ˆ Player ìƒì„± í›„ ì´ˆê¸°í™”
                 Player newPlayer;
                 InitPlayer(newPlayer, playerId, remote_ep_);
                 clients_[playerId] = newPlayer;
             }
 
-            // 2. À§Ä¡ °»½Å
+            // 2. ìœ„ì¹˜ ê°±ì‹ 
             clients_[playerId].x = movePkt.x;
             clients_[playerId].y = movePkt.y;
 
-            // 3. ºê·ÎµåÄ³½ºÆ®
+            // 3. ë¸Œë¡œë“œìºìŠ¤íŠ¸
             broadcast(data.data(), bytes, playerId);
         }
         else if (type == PacketType::SHOOT) {
@@ -95,19 +95,18 @@ private:
             std::memcpy(&pkt, data.data(), sizeof(ShootPacket));
 
             uint32_t shooterId = pkt.playerId;
-            // Å¸°Ù ID ¼±Á¤ ·ÎÁ÷: ½ÇÁ¦ °ÔÀÓ¿¡¼­´Â ÇöÀç Á¢¼ÓµÈ Å¬¶óÀÌ¾ğÆ® ¸®½ºÆ®¿¡¼­ 
-            // ½î´Â »ç¶÷(shooterId)°ú ´Ù¸¥ ÇÃ·¹ÀÌ¾î¸¦ Ã£¾Æ¾ß ÇÕ´Ï´Ù.
+            // íƒ€ê²Ÿ ID ì„ ì • ë¡œì§: ì‹¤ì œ ê²Œì„ì—ì„œëŠ” í˜„ì¬ ì ‘ì†ëœ í´ë¼ì´ì–¸íŠ¸ ë¦¬ìŠ¤íŠ¸ì—ì„œ ì˜ëŠ” ì‚¬ëŒ(shooterId)ê³¼ ë‹¤ë¥¸ í”Œë ˆì´ì–´ë¥¼ ì°¾ì•„ì•¼ í•¨
             for (auto& [id, player] : clients_) {
                 if (id != shooterId) {
                     uint32_t targetId = id;
-                    // Ãæµ¹ ÆÇÁ¤ ¹× Á¡¼ö ·ÎÁ÷
+                    // ì¶©ëŒ íŒì • ë° ì ìˆ˜ ë¡œì§
                     if (PhysicsEngine::CheckCollision(clients_[shooterId].x, clients_[shooterId].y,
                         clients_[targetId].x, clients_[targetId].y)) {
 
                         GameManager::UpdateScore(shooterId, clients_[targetId].hp);
 
                         HitPacket hitPkt;
-                        hitPkt.type = PacketType::HIT; // Å¸ÀÔ ¸í½Ã
+                        hitPkt.type = PacketType::HIT; // íƒ€ì… ëª…ì‹œ
                         hitPkt.playerId = targetId;
                         hitPkt.currentHp = clients_[targetId].hp;
 
@@ -123,9 +122,9 @@ private:
         for (auto& [id, player] : clients_) {
             if (id == exclude_id) continue;
 
-            std::cout << "[DEBUG] " << id << "¹ø¿¡°Ô ÁÂÇ¥(" << player.x << ", " << player.y
-                << ") Àü¼Û Áß! IP: " << player.ep.address() << std::endl;            
-            // endpoint Á¤º¸°¡ player ±¸Á¶Ã¼¿¡ ÀÖ¾î¾ß ÇÔ
+            std::cout << "[DEBUG] " << id << "ë²ˆì—ê²Œ ì¢Œí‘œ(" << player.x << ", " << player.y
+                << ") ì „ì†¡ ì¤‘! IP: " << player.ep.address() << std::endl;            
+            // endpoint ì •ë³´ê°€ player êµ¬ì¡°ì²´ì— ìˆì–´ì•¼ í•¨
             socket_.async_send_to(buffer(data, len), player.ep, [](auto, auto) {});
         }
     }
@@ -138,13 +137,13 @@ int main() {
         boost::asio::io_context ioContext;
         g_ioContext = &ioContext;
 
-        // SIGINT(Ctrl+C) ½ÅÈ£ Ã³¸® µî·Ï
+        // SIGINT(Ctrl+C) ì‹ í˜¸ ì²˜ë¦¬ ë“±ë¡
         std::signal(SIGINT, signal_handler);
 
-        // ¼­¹ö Æ÷Æ® 9000¹øÀ¸·Î ½ÃÀÛ
+        // ì„œë²„ í¬íŠ¸ 9000ë²ˆìœ¼ë¡œ ì‹œì‘
         FpsServer server(ioContext, 9000);
 
-        // io_context ½ÇÇà (¼­¹ö ·çÇÁ ½ÃÀÛ)
+        // io_context ì‹¤í–‰ (ì„œë²„ ë£¨í”„ ì‹œì‘)
         ioContext.run();
     }
     catch (std::exception& e) {
