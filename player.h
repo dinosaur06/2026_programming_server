@@ -2,19 +2,19 @@
 #define PLAYER_H
 
 #include <cstdint>
-#include <boost/asio.hpp> // endpoint¸¦ »ç¿ëÇÏ±â À§ÇØ Ãß°¡
+#include <boost/asio.hpp> // endpointë¥¼ ì‚¬ìš©í•˜ê¸° ìœ„í•´ ì¶”ê°€
 
 struct Player {
     uint32_t id;
     int hp;
     int score;
     float x, y;
-    boost::asio::ip::udp::endpoint ep; // broadcast¸¦ À§ÇØ ep Ãß°¡!
+    boost::asio::ip::udp::endpoint ep; // broadcastë¥¼ ìœ„í•´ ep ì¶”ê°€
 
     Player() : id(0), hp(100), score(0), x(0), y(0) {}
 };
 
-// ÇÃ·¹ÀÌ¾î ÃÊ±âÈ­ ÇÔ¼ö ¼±¾ğ
+// í”Œë ˆì´ì–´ ì´ˆê¸°í™” í•¨ìˆ˜ ì„ ì–¸
 void InitPlayer(Player& p, uint32_t id, boost::asio::ip::udp::endpoint ep);
 
 #endif
