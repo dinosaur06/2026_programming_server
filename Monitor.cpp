@@ -8,7 +8,7 @@
 
 using namespace std;
 
-// Àü¿ª º¯¼ö ÃÊ±âÈ­
+// ì „ì—­ ë³€ìˆ˜ ì´ˆê¸°í™”
 atomic<int> g_packetCount(0);
 atomic<long long> g_totalBytes(0);
 static bool g_keepRunning = true;
@@ -25,14 +25,14 @@ void MonitorLoop() {
     while (g_keepRunning) {
         this_thread::sleep_for(chrono::seconds(1));
 
-        // 1ÃÊ°£ ¸ðÀÎ µ¥ÀÌÅÍ ÃßÃâ ÈÄ Ä«¿îÅÍ ¸®¼Â
+        // 1ì´ˆê°„ ëª¨ì¸ ë°ì´í„° ì¶”ì¶œ í›„ ì¹´ìš´í„° ë¦¬ì…‹
         int currentCount = g_packetCount.exchange(0);
         long long currentBytes = g_totalBytes.exchange(0);
         double currentKB = currentBytes / 1024.0;
 
         g_history.push_back({ elapsedSeconds, currentCount, currentKB });
 
-        // ÃÊ´ç 1000 ÆÐÅ¶ ÀÌ»ó À¯ÀÔ ½Ã µðµµ½º ÀÇ½É °æ°í µð½ºÇÃ·¹ÀÌ
+        // ì´ˆë‹¹ 1000 íŒ¨í‚· ì´ìƒ ìœ ìž… ì‹œ ë””ë„ìŠ¤ ì˜ì‹¬ ê²½ê³ 
         if (currentCount > 1000) {
             cout << "\a[!] Warning: Packet per second spike at [" << elapsedSeconds << "s]. PPS: " << currentCount << endl;
         }
@@ -44,7 +44,7 @@ void PrintFinalReport() {
     long long grandTotalPackets = 0;
     int maxPPS = 0;
     int maxPPSAt = 0;
-    int threshold = 500; // Å½Áö ÀÓ°èÄ¡
+    int threshold = 500; // íƒì§€ ìž„ê³„ì¹˜
     vector<int> thresholdReachedTimes;
 
     for (const auto& s : g_history) {
@@ -58,23 +58,23 @@ void PrintFinalReport() {
         }
     }
 
-    // ÄÜ¼Ö ¿ä¾à Ãâ·Â
+    // ì½˜ì†” ìš”ì•½ ì¶œë ¥
     cout << "\n" << string(40, '=') << endl;
     cout << "         [ Server Security Analysis Results ]" << endl;
     cout << string(40, '=') << endl;
     cout << " - Server Uptime: " << g_history.size() << " sec" << endl;
     cout << " - Total Packets Received: " << grandTotalPackets << endl;
     cout << " - Peak Value: " << maxPPS << " PPS (At: " << maxPPSAt << " sec)" << endl;
-    cout << " - Anomalies Detected: " << (thresholdReachedTimes.empty() ? 0 : thresholdReachedTimes.size()) << " È¸" << endl;
+    cout << " - Anomalies Detected: " << (thresholdReachedTimes.empty() ? 0 : thresholdReachedTimes.size()) << " íšŒ" << endl;
     cout << string(40, '=') << endl;
 
-    // ÆÄÀÏ ÀúÀå
+    // íŒŒì¼ ì €ìž¥
     ofstream outFile("security_report.txt");
     if (outFile.is_open()) {
         outFile << "========================================" << endl;
         outFile << "       Server Security Detailed Report" << endl;
         outFile << "========================================" << endl;
-        outFile << "1. Total Packets Received: " << grandTotalPackets << " °³" << endl;
+        outFile << "1. Total Packets Received: " << grandTotalPackets << " ê°œ" << endl;
         outFile << "2. Peak PPS Value: " << maxPPS << " pkts/s (At: " << maxPPSAt << " sec)" << endl;
         outFile << "\n3. Threshold (" << threshold << " PPS) Exceedance Records:" << endl;
 
